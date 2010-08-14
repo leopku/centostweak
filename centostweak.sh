@@ -17,6 +17,9 @@
 
 #########################################################################
 #   History:
+#   2010-08-14:
+#       Fixed:
+#           Optimize code of disabling selinux(thanks huichrist)
 #   2010-08-10:
 #       Fixed:
 #           Disable ius yum repository by default.
@@ -59,7 +62,7 @@ if [[ "$(whoami)" != "root" ]]; then
   exit 1
 fi
  
-#设置升级源
+# 设置升级源
 cd /etc/yum.repos.d/
 cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i -e 's/mirrorlist/#mirrorlist/' CentOS-Base.repo
@@ -98,11 +101,12 @@ echo -e "# Name: IUS RPM Repository for Red Hat Enterprise 5\n"\
 "enabled = 0\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/ius.repo
 
-#安装工具软件sysstat, ntp, snmpd, sudo
+# 安装工具软件sysstat, ntp, snmpd, sudo
 yum install sysstat ntp net-snmp sudo screen -y
 
-#配置sudo
+# 配置sudo
 cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
+# 允许wheel组的系统用户通过无密码sudo方式行使root权限
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
 # 添加环境变量，保证sudo时不用绝对路径执行常用管理命令以及编译软件时能找到库文件
 echo 'export PATH=\$PATH:/sbin:/usr/sbin' >> /etc/bashrc
@@ -118,18 +122,18 @@ grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -i0 {}
 # 关闭系统按mount次数决定下次重启时运行fsck
 # grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -c-1 {}
 
-#配置时间同步
+# 配置时间同步
 echo "/usr/sbin/ntpdate cn.pool.ntp.org" >> /etc/cron.daily/ntpdate
 chmod +x /etc/cron.daily/ntpdate
 
-#配置snmpd
+# 配置snmpd
 cp /etc/snmp/snmpd.conf /etc/snmp/snmpd.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i 's/#view all/view all/' /etc/snmp/snmpd.conf
 sed -i 's/#access MyROGroup/access MyROGroup/' /etc/snmp/snmpd.conf
 chkconfig snmpd on
 service snmpd start
 
-#修改vim配置文件
+# 修改vim配置文件
 mv /etc/vimrc /etc/vimrc.`date +"%Y-%m-%d_%H-%M-%S"`
 cp /usr/share/vim/vim70/vimrc_example.vim /etc/vimrc
 # 屏蔽终端下鼠标功能
@@ -140,33 +144,33 @@ echo "set tabstop=4" >> /etc/vimrc
 echo "set shiftwidth=4" >> /etc/vimrc
 echo "colo elflord" >> /etc/vimrc
  
-#安装完成后做一些基本的设置
-#关闭SELINUX
+# 安装完成后做一些基本的设置
+# 关闭SELINUX
 cp /etc/sysconfig/selinux /etc/sysconfig/selinux.`date +"%Y-%m-%d_%H-%M-%S"`
-sed -i '/SELINUX=enforcing/s/SELINUX=enforcing/SELINUX=disabled/' /etc/sysconfig/selinux
-#修改主机名,修改俩文件/etc/sysconfig /network和/etc/hosts
+sed -i '/SELINUX/s/\(enforcing\|permissive\)/disabled/' /etc/sysconfig/selinux
+# 修改主机名,修改俩文件/etc/sysconfig /network和/etc/hosts
 #sed -i -e "/HOSTNAME/s/^/#/" /etc/sysconfig/network
 #sed -i -e "$ a HOSTNAME=$HOSTNAME" /etc/sysconfig/network
 #sed -i -e "/127.0.0.1/c 127.0.0.1    $HOSTNAME localhost.localdomain localhost" /etc/hosts
 
-#disable IPV6
+# disable IPV6
 cp /etc/modprobe.conf /etc/modprobe.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 echo "alias net-pf-10 off" >> /etc/modprobe.conf
 echo "alias ipv6 off" >> /etc/modprobe.conf
  
-#设置ssh
+# 设置ssh
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.`date +"%Y-%m-%d_%H-%M-%S"`
-#允许root远程登录
+# 允许root远程登录
 # sed -i '/#PermitRootLogin/s/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config
-#屏蔽掉GSSAPIAuthentication yes和GSSAPICleanupCredentials yes
+# 屏蔽掉GSSAPIAuthentication yes和GSSAPICleanupCredentials yes
 sed -i -e '74 s/^/#/' -i -e '76 s/^/#/' /etc/ssh/sshd_config
-#取消使用DNS
+# 取消使用DNS
 sed -i "s/#UseDNS yes/UseDNS no/" /etc/ssh/sshd_config
-#44行是#PubkeyAuthentication yes。48行是#RhostsRSAAuthentication no
-#sed -i -e '44 s/^/#/' -i -e '48 s/^/#/' /etc/ssh/sshd_config
+# 44行是#PubkeyAuthentication yes。48行是#RhostsRSAAuthentication no
+# sed -i -e '44 s/^/#/' -i -e '48 s/^/#/' /etc/ssh/sshd_config
 /etc/init.d/sshd restart
  
-#将错误按键的beep声关掉。stop the “beep"
+# 将错误按键的beep声关掉。stop the “beep"
 # cp /etc/inputrc /etc/inputrc.origin
 # sed -i '/#set bell-style none/s/#set bell-style none/set bell-style none/' /etc/inputrc
 
