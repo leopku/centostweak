@@ -17,6 +17,10 @@
 
 #########################################################################
 #   History:
+#   2010-08-16:
+#       Add:
+#           Close the tty from second to sixth(thanks selboo).
+#           Increase default open file limits from 1024 to 65525.
 #   2010-08-14:
 #       Fixed:
 #           Optimize code of disabling selinux(thanks huichrist)
@@ -241,3 +245,11 @@ echo -e "*filter\n"\
 "#-A FORWARD -p icmp -m icmp --icmp-type 8 -m limit --limit 1/sec -j ACCEPT \n"\
 "COMMIT\n" > /etc/sysconfig/iptables
 service iptables restart
+
+# Linux 大多都是远程维护 pts连接的，可以关闭多余的 tty，保留一个用于物理登陆
+cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
+sed -i '/tty[2-6]/s/^/#/' /etc/inittab
+
+# 增加文件描述符限制
+cp /etc/security/limits.conf /etc/security/limits.conf.`date +"%Y-%m-%d_%H-%M-%S"`
+sed -i '/# End of file/i\*\t\t-\tnofile\t\t65535' /etc/security/limits.conf
