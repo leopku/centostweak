@@ -17,9 +17,12 @@
 
 #########################################################################
 #   History:
+#   2010-08-18:
+#       Fixed:
+#           A bug while exporting path into /etc/bashrc caused by "\"(thanks 181789871).
 #   2010-08-16:
 #       Add:
-#           Close the tty from second to sixth(thanks selboo).
+#           Close the tty between second and sixth(thanks selboo).
 #           Increase default open file limits from 1024 to 65525.
 #   2010-08-14:
 #       Fixed:
@@ -113,7 +116,7 @@ cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
 # 允许wheel组的系统用户通过无密码sudo方式行使root权限
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
 # 添加环境变量，保证sudo时不用绝对路径执行常用管理命令以及编译软件时能找到库文件
-echo 'export PATH=\$PATH:/sbin:/usr/sbin' >> /etc/bashrc
+echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
 echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
 echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
 
