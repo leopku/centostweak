@@ -1,5 +1,5 @@
 What is CentOS Tweak
-===============
+====================
 
 CentOS Tweak is a script of optimizing centos 5.x server(written in shell).
 CentOS Tweak is distributed under the BSD license.
@@ -21,18 +21,21 @@ Requirements
 .. _CentOS: http://www.centos.org/
 
 How to use CentOS Tweak
-======================
+=======================
 
 Download
-------------------------
+---------
 
 * Visit CentOS Tweak on GitHub: http://github.com/leopku/centostweak/
 * Download last release from http://github.com/leopku/centostweak/downloads or 
-last source code from http://github.com/leopku/centostweak/archives/master
+  last source code from http://github.com/leopku/centostweak/archives/master
 
 Use
-------------------------------
+---
 * uncompress the file downloaded.
 * running centostweak.sh by root.
 
-TODO ...
+TODO
+----
+...
+
