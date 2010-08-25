@@ -17,6 +17,10 @@
 
 #########################################################################
 #   History:
+#   2010-08-25:
+#       Add:
+#           Disable Ctrl+Alt+Del rebooting(thanks 181789871).(default not effect. uncommnet to take effect.)
+#           Add README file.
 #   2010-08-18:
 #       Fixed:
 #           A bug while exporting path into /etc/bashrc caused by "\"(thanks 181789871).
@@ -45,7 +49,7 @@
 #           Change /etc/cron.daily/ntpdate with run mode(+x).
 #   2010-08-04:
 #       Add:
-#           Install sudo & enable wheel group to use nopasswrd sudo.
+#           Install sudo. Enable wheel group to use nopasswrd sudo.
 #   2010-08-02:
 #       Add:
 #           Install & config snmpd.
@@ -256,3 +260,8 @@ sed -i '/tty[2-6]/s/^/#/' /etc/inittab
 # 增加文件描述符限制
 cp /etc/security/limits.conf /etc/security/limits.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i '/# End of file/i\*\t\t-\tnofile\t\t65535' /etc/security/limits.conf
+
+# 使ctrl+alt+del关机键无效
+# cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
+# sed -i "s/ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/#ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/" /etc/inittab
+# /sbin/init q
