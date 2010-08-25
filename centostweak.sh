@@ -121,8 +121,15 @@ cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
 # 添加环境变量，保证sudo时不用绝对路径执行常用管理命令以及编译软件时能找到库文件
 echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
-echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
-echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
+#echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
+#echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
+if [ `uname -m | sed 's/x86_64/64/'` -eq 64 ]; then
+    echo 'export LDFLAGS="-L/usr/local/lib64 -Wl,-rpath,/usr/local/lib64"' >> /etc/bashrc
+    echo 'export LD_LIBRARY_PATH="/usr/lib64"' >> /etc/bashrc
+else
+    echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
+    echo 'export LD_LIBRARY_PATH="/usr/lib"' >> /etc/bashrc
+fi
 
 # 优化硬盘
 cp /etc/fstab /etc/fstab.`date +"%Y-%m-%d_%H-%M-%S"`
