@@ -16,7 +16,7 @@ Features
 Requirements
 ============
 
-* CentOS 5.x
+* `CentOS`_ 5.x
 
 .. _CentOS: http://www.centos.org/
 
