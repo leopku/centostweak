@@ -17,6 +17,11 @@
 
 #########################################################################
 #   History:
+#   2010-09-11:
+#       Add:
+#           Install fail2ban to prevent password exhaustion attacking and set ban time as 12 hours.(default not effect. recommend uncomment if your server had public IP.)
+#       Fixed:
+#           Command not found bug when running by sudo.
 #   2010-08-25:
 #       Add:
 #           Disable Ctrl+Alt+Del rebooting(thanks 181789871).(default not effect. uncommnet to take effect.)
@@ -67,11 +72,15 @@
 #       Copied from http://laohuanggua.info/archives/695.
 #########################################################################
 
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
 # Require root to run this script.
 if [[ "$(whoami)" != "root" ]]; then
   echo "Please run this script as root." >&2
   exit 1
 fi
+
+SERVICE=`which service`
+CHKCONFIG=`which chkconfig`
  
 # 设置升级源
 cd /etc/yum.repos.d/
@@ -141,8 +150,8 @@ chmod +x /etc/cron.daily/ntpdate
 cp /etc/snmp/snmpd.conf /etc/snmp/snmpd.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i 's/#view all/view all/' /etc/snmp/snmpd.conf
 sed -i 's/#access MyROGroup/access MyROGroup/' /etc/snmp/snmpd.conf
-chkconfig snmpd on
-service snmpd start
+${CHKCONFIG} snmpd on
+${SERVICE} snmpd start
 
 # 修改vim配置文件
 mv /etc/vimrc /etc/vimrc.`date +"%Y-%m-%d_%H-%M-%S"`
@@ -189,24 +198,24 @@ sed -i "s/#UseDNS yes/UseDNS no/" /etc/ssh/sshd_config
 SERVICES="acpid atd auditd avahi-daemon bluetooth cpuspeed cups firstboot hidd ip6tables isdn mcstrans messagebus pcscd rawdevices sendmail yum-updatesd"
 for service in $SERVICES
 do
-    chkconfig $service off
-    service $service stop
+    ${CHKCONFIG} $service off
+    ${SERVICE} $service stop
 done
 
 # 优化内核参数
 mv /etc/sysctl.conf /etc/sysctl.conf.`date +"%Y-%m-%d_%H-%M-%S"`
-echo -e "kernel.sysrq = 0\n"\
-"kernel.core_uses_pid = 1\n"\
+echo -e "kernel.core_uses_pid = 1\n"\
 "kernel.msgmnb = 65536\n"\
 "kernel.msgmax = 65536\n"\
 "kernel.shmmax = 68719476736\n"\
 "kernel.shmall = 4294967296\n"\
-"net.core.wmem_default = 8388608\n"\
+"kernel.sysrq = 0\n"\
+"net.core.netdev_max_backlog = 262144\n"\
 "net.core.rmem_default = 8388608\n"\
 "net.core.rmem_max = 16777216\n"\
-"net.core.wmem_max = 16777216\n"\
-"net.core.netdev_max_backlog = 262144\n"\
 "net.core.somaxconn = 262144\n"\
+"net.core.wmem_default = 8388608\n"\
+"net.core.wmem_max = 16777216\n"\
 "net.ipv4.conf.default.rp_filter = 1\n"\
 "net.ipv4.conf.default.accept_source_route = 0\n"\
 "net.ipv4.ip_forward = 0\n"\
@@ -251,7 +260,7 @@ echo -e "*filter\n"\
 "-A FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK RST -m limit --limit 1/sec -j ACCEPT \n"\
 "#-A FORWARD -p icmp -m icmp --icmp-type 8 -m limit --limit 1/sec -j ACCEPT \n"\
 "COMMIT\n" > /etc/sysconfig/iptables
-service iptables restart
+${SERVICE} iptables restart
 
 # Linux 大多都是远程维护 pts连接的，可以关闭多余的 tty，保留一个用于物理登陆
 cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
@@ -265,3 +274,8 @@ sed -i '/# End of file/i\*\t\t-\tnofile\t\t65535' /etc/security/limits.conf
 # cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
 # sed -i "s/ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/#ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/" /etc/inittab
 # /sbin/init q
+
+# 安装fail2ban防暴力工具遍历弱口令利器，有外网IP的推荐打开注释。
+# yum install fail2ban
+# cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.`date +"%Y-%m-%d_%H-%M-%S"`
+# sed -i 's/bantime  = 600/bantime  = 43200/' /etc/fail2ban/jail.conf
