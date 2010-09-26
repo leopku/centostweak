@@ -1,22 +1,28 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
-#########################################################################
+#################################################################################
 # WARNING - Read First Before Running This Script!
 # Running this script maybe HARMFUL to your system. Therefor, the user shall
 # carefully read all of this script and bear the relevant risks by 
 # himself/herself. Running this script means the user accepting agreement above.
-#########################################################################
+#################################################################################
 
-#########################################################################
+################################################################################
 #   Centos Tweak script for server
 #   Licenced under GPLv3
 #   Writen by: leo <leo.ss.pku@gmail.com>
 #   Inspired by: yzhkpli@gmail.com
 #   Feed back: http://www.himysql.com/groups/centos-tweak/
-#########################################################################
+################################################################################
 
-#########################################################################
+################################################################################
 #   History:
+#	2010-09-26:
+#		Fixed:
+#           A bug while generating /etc/yum.repo.d/dag-sohu.repo.
+#           Change this file to UTF8-NOBOM.
+#       Add:
+#           CentALT yum repository(/etc/yum.repo.d/centalt.repo) while the OS is RHEL/CentOS 5.
 #   2010-09-11:
 #       Add:
 #           Install fail2ban to prevent password exhaustion attacking and set ban time as 12 hours.(default not effect. recommend uncomment if your server had public IP.)
@@ -70,9 +76,9 @@
 #       Add functions for kernel & TCP parameters optimizing.
 #   2010-06-06:
 #       Copied from http://laohuanggua.info/archives/695.
-#########################################################################
+################################################################################
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+export PATH=$PATH:/bin:/sbin:/usr/sbin
 # Require root to run this script.
 if [[ "$(whoami)" != "root" ]]; then
   echo "Please run this script as root." >&2
@@ -81,8 +87,8 @@ fi
 
 SERVICE=`which service`
 CHKCONFIG=`which chkconfig`
- 
-# ÉèÖÃÉı¼¶Ô´
+
+# è®¾ç½®å‡çº§æº
 cd /etc/yum.repos.d/
 cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i -e 's/mirrorlist/#mirrorlist/' CentOS-Base.repo
@@ -94,81 +100,91 @@ sed -i 's/gpgcheck=1/gpgcheck=0/' /etc/yum.conf
 sed -i 's/plugins=1/plugins=0/' /etc/yum.conf
 sed -i 's/metadata_expire=1h/metadata_expire=24h/' /etc/yum.conf
 
-# Ìí¼Ódag@sohuÔ´
+# æ·»åŠ dag@sohuæº
 # relver=`uname -r | awk -F. '{print $NF}'`
-echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise 5 ¨C dag\n"\
+echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise â€“ dag\n"\
 "# URL: http://mirrors.sohu.com/dag/redhat/\n"\
 "[dag-sohu]\n"\
-"name = Red Hat Enterprise \$releasever ¨C sohu.com ¨C dag\n"\
-"baseurl = http://mirrors.sohu.com/dag/redhat/`uname -r | awk -F. '{print $NF}'`/en/\$basearch/dag\n"\
+"name = Red Hat Enterprise \$releasever â€“ sohu.com â€“ dag\n"\
+"baseurl = http://mirrors.sohu.com/dag/redhat/`uname -r | awk -F. '{print substr($NF,1,3)}'`/en/\$basearch/dag\n"\
 "enabled = 1\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/dag-sohu.repo
-# Ìí¼Óepel@sohuÔ´
-echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise 5 ¨C EPEL\n"\
+# æ·»åŠ epel@sohuæº
+echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise â€“ EPEL\n"\
 "# URL: http://mirrors.sohu.com/fedora-epel/\n"\
 "[epel-sohu]\n"\
 "name = Fedora EPEL \$releasever - sohu.com\n"\
-"baseurl = http://mirrors.sohu.com/fedora-epel/5Server/\$basearch\n"\
+"baseurl = http://mirrors.sohu.com/fedora-epel/\$releasever/\$basearch\n"\
 "enabled = 1\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/epel-sohu.repo
-# Ìí¼ÓiusÔ´
-# Ê¹ÓÃ·½·¨£º--enablerepo=ius£¬Èçyum install python26 --enablerepo=ius
+# æ·»åŠ CentALTæº
+# ä½¿ç”¨æ–¹æ³•ï¼š--enablerepo=centalt
+if [[ `uname -r | awk -F. '{print substr($NF,1,3)}'` == "el5"]]; then
+echo -e "[CentALT]\n"\
+"name=CentALT Packages for Enterprise Linux 5 - \$basearch\n"\
+"baseurl=http://centos.alt.ru/repository/centos/5/\$basearch/\n"\
+"enabled=1\n"\
+"gpgcheck=0" > /etc/yum.repos.d/centalt.repo
+fi
+# æ·»åŠ iusæº
+# ä½¿ç”¨æ–¹æ³•ï¼š--enablerepo=iusï¼Œå¦‚yum install python26 --enablerepo=ius
 echo -e "# Name: IUS RPM Repository for Red Hat Enterprise 5\n"\
 "# URL: http://dl.iuscommunity.org/pub/ius/stable/Redhat/\n"\
 "[ius]\n"\
-"name = Red Hat Enterprise \$releasever ¨C ius\n"\
+"name = Red Hat Enterprise \$releasever â€“ ius\n"\
 "baseurl = http://dl.iuscommunity.org/pub/ius/stable/Redhat/\$releasever/\$basearch/\n"\
 "enabled = 0\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/ius.repo
 
-# °²×°¹¤¾ßÈí¼şsysstat, ntp, snmpd, sudo
+# å®‰è£…å·¥å…·è½¯ä»¶sysstat, ntp, snmpd, sudo
 yum install sysstat ntp net-snmp sudo screen -y
 
-# ÅäÖÃsudo
+# é…ç½®sudo
 cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
-# ÔÊĞíwheel×éµÄÏµÍ³ÓÃ»§Í¨¹ıÎŞÃÜÂësudo·½Ê½ĞĞÊ¹rootÈ¨ÏŞ
+# å…è®¸wheelç»„çš„ç³»ç»Ÿç”¨æˆ·é€šè¿‡æ— å¯†ç sudoæ–¹å¼è¡Œä½¿rootæƒé™
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
-# Ìí¼Ó»·¾³±äÁ¿£¬±£Ö¤sudoÊ±²»ÓÃ¾ø¶ÔÂ·¾¶Ö´ĞĞ³£ÓÃ¹ÜÀíÃüÁîÒÔ¼°±àÒëÈí¼şÊ±ÄÜÕÒµ½¿âÎÄ¼ş
+# æ·»åŠ ç¯å¢ƒå˜é‡ï¼Œä¿è¯sudoæ—¶ä¸ç”¨ç»å¯¹è·¯å¾„æ‰§è¡Œå¸¸ç”¨ç®¡ç†å‘½ä»¤ä»¥åŠç¼–è¯‘è½¯ä»¶æ—¶èƒ½æ‰¾åˆ°åº“æ–‡ä»¶
 echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
 echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
 echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
 
-# ÓÅ»¯Ó²ÅÌ
+# ä¼˜åŒ–ç¡¬ç›˜
 cp /etc/fstab /etc/fstab.`date +"%Y-%m-%d_%H-%M-%S"`
-# ¹Ø±ÕÏµÍ³Ğ´ÈëÎÄ¼ş×îºó¶ÁÈ¡Ê±¼ä
+# å…³é—­ç³»ç»Ÿå†™å…¥æ–‡ä»¶æœ€åè¯»å–æ—¶é—´
 sed -i 's/ext3    defaults/ext3    defaults,noatime/' /etc/fstab
-# ¹Ø±ÕÏµÍ³°´Ê±¼ä¼ä¸ô¾ö¶¨ÏÂ´ÎÖØÆôÊ±ÔËĞĞfsck
+# å…³é—­ç³»ç»ŸæŒ‰æ—¶é—´é—´éš”å†³å®šä¸‹æ¬¡é‡å¯æ—¶è¿è¡Œfsck
 grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -i0 {}
-# ¹Ø±ÕÏµÍ³°´mount´ÎÊı¾ö¶¨ÏÂ´ÎÖØÆôÊ±ÔËĞĞfsck
+# å…³é—­ç³»ç»ŸæŒ‰mountæ¬¡æ•°å†³å®šä¸‹æ¬¡é‡å¯æ—¶è¿è¡Œfsck
 # grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -c-1 {}
 
-# ÅäÖÃÊ±¼äÍ¬²½
+# é…ç½®æ—¶é—´åŒæ­¥
 echo "/usr/sbin/ntpdate cn.pool.ntp.org" >> /etc/cron.daily/ntpdate
 chmod +x /etc/cron.daily/ntpdate
 
-# ÅäÖÃsnmpd
+# é…ç½®snmpd
 cp /etc/snmp/snmpd.conf /etc/snmp/snmpd.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i 's/#view all/view all/' /etc/snmp/snmpd.conf
 sed -i 's/#access MyROGroup/access MyROGroup/' /etc/snmp/snmpd.conf
 ${CHKCONFIG} snmpd on
 ${SERVICE} snmpd start
 
-# ĞŞ¸ÄvimÅäÖÃÎÄ¼ş
+# ä¿®æ”¹vimé…ç½®æ–‡ä»¶
 mv /etc/vimrc /etc/vimrc.`date +"%Y-%m-%d_%H-%M-%S"`
 cp /usr/share/vim/vim70/vimrc_example.vim /etc/vimrc
-# ÆÁ±ÎÖÕ¶ËÏÂÊó±ê¹¦ÄÜ
+# å±è”½ç»ˆç«¯ä¸‹é¼ æ ‡åŠŸèƒ½
 sed -i -e 's/set mouse=a/" set mouse=a/' /etc/vimrc
-# ÅäÖÃtab½¨¡¢elflordÑÕÉ«·½°¸µÈ
+# é…ç½®tabå»ºã€elflordé¢œè‰²æ–¹æ¡ˆç­‰
 echo "set history=1000" >> /etc/vimrc
 echo "set tabstop=4" >> /etc/vimrc
 echo "set shiftwidth=4" >> /etc/vimrc
+echo "set paste" >> /etc/vimrc
 echo "colo elflord" >> /etc/vimrc
  
-# °²×°Íê³Éºó×öÒ»Ğ©»ù±¾µÄÉèÖÃ
-# ¹Ø±ÕSELINUX
+# å®‰è£…å®Œæˆååšä¸€äº›åŸºæœ¬çš„è®¾ç½®
+# å…³é—­SELINUX
 cp /etc/sysconfig/selinux /etc/sysconfig/selinux.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i '/SELINUX/s/\(enforcing\|permissive\)/disabled/' /etc/sysconfig/selinux
-# ĞŞ¸ÄÖ÷»úÃû,ĞŞ¸ÄÁ©ÎÄ¼ş/etc/sysconfig /networkºÍ/etc/hosts
+# ä¿®æ”¹ä¸»æœºå,ä¿®æ”¹ä¿©æ–‡ä»¶/etc/sysconfig /networkå’Œ/etc/hosts
 #sed -i -e "/HOSTNAME/s/^/#/" /etc/sysconfig/network
 #sed -i -e "$ a HOSTNAME=$HOSTNAME" /etc/sysconfig/network
 #sed -i -e "/127.0.0.1/c 127.0.0.1    $HOSTNAME localhost.localdomain localhost" /etc/hosts
@@ -178,23 +194,23 @@ cp /etc/modprobe.conf /etc/modprobe.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 echo "alias net-pf-10 off" >> /etc/modprobe.conf
 echo "alias ipv6 off" >> /etc/modprobe.conf
  
-# ÉèÖÃssh
+# è®¾ç½®ssh
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.`date +"%Y-%m-%d_%H-%M-%S"`
-# ÔÊĞírootÔ¶³ÌµÇÂ¼
+# å…è®¸rootè¿œç¨‹ç™»å½•
 # sed -i '/#PermitRootLogin/s/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config
-# ÆÁ±ÎµôGSSAPIAuthentication yesºÍGSSAPICleanupCredentials yes
+# å±è”½æ‰GSSAPIAuthentication yeså’ŒGSSAPICleanupCredentials yes
 sed -i -e '74 s/^/#/' -i -e '76 s/^/#/' /etc/ssh/sshd_config
-# È¡ÏûÊ¹ÓÃDNS
+# å–æ¶ˆä½¿ç”¨DNS
 sed -i "s/#UseDNS yes/UseDNS no/" /etc/ssh/sshd_config
-# 44ĞĞÊÇ#PubkeyAuthentication yes¡£48ĞĞÊÇ#RhostsRSAAuthentication no
+# 44è¡Œæ˜¯#PubkeyAuthentication yesã€‚48è¡Œæ˜¯#RhostsRSAAuthentication no
 # sed -i -e '44 s/^/#/' -i -e '48 s/^/#/' /etc/ssh/sshd_config
 /etc/init.d/sshd restart
  
-# ½«´íÎó°´¼üµÄbeepÉù¹Øµô¡£stop the ¡°beep"
+# å°†é”™è¯¯æŒ‰é”®çš„beepå£°å…³æ‰ã€‚stop the â€œbeep"
 # cp /etc/inputrc /etc/inputrc.origin
 # sed -i '/#set bell-style none/s/#set bell-style none/set bell-style none/' /etc/inputrc
 
-# ¹Ø±Õ²»±ØÒªµÄ·şÎñ
+# å…³é—­ä¸å¿…è¦çš„æœåŠ¡
 SERVICES="acpid atd auditd avahi-daemon bluetooth cpuspeed cups firstboot hidd ip6tables isdn mcstrans messagebus pcscd rawdevices sendmail yum-updatesd"
 for service in $SERVICES
 do
@@ -202,7 +218,7 @@ do
     ${SERVICE} $service stop
 done
 
-# ÓÅ»¯ÄÚºË²ÎÊı
+# ä¼˜åŒ–å†…æ ¸å‚æ•°
 mv /etc/sysctl.conf /etc/sysctl.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 echo -e "kernel.core_uses_pid = 1\n"\
 "kernel.msgmnb = 65536\n"\
@@ -239,7 +255,7 @@ echo -e "kernel.core_uses_pid = 1\n"\
 "net.ipv4.tcp_wmem = 4096    16384   16777216\n" > /etc/sysctl.conf
 sysctl -p
 
-# ÉèÖÃiptables
+# è®¾ç½®iptables
 if [ -f /etc/sysconfig/iptables ]; then
     cp /etc/sysconfig/iptables /etc/sysconfig/iptables.`date +"%Y-%m-%d_%H-%M-%S"`
 fi
@@ -262,20 +278,20 @@ echo -e "*filter\n"\
 "COMMIT\n" > /etc/sysconfig/iptables
 ${SERVICE} iptables restart
 
-# Linux ´ó¶à¶¼ÊÇÔ¶³ÌÎ¬»¤ ptsÁ¬½ÓµÄ£¬¿ÉÒÔ¹Ø±Õ¶àÓàµÄ tty£¬±£ÁôÒ»¸öÓÃÓÚÎïÀíµÇÂ½
+# Linux å¤§å¤šéƒ½æ˜¯è¿œç¨‹ç»´æŠ¤ ptsè¿æ¥çš„ï¼Œå¯ä»¥å…³é—­å¤šä½™çš„ ttyï¼Œä¿ç•™ä¸€ä¸ªç”¨äºç‰©ç†ç™»é™†
 cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i '/tty[2-6]/s/^/#/' /etc/inittab
 
-# Ôö¼ÓÎÄ¼şÃèÊö·ûÏŞÖÆ
+# å¢åŠ æ–‡ä»¶æè¿°ç¬¦é™åˆ¶
 cp /etc/security/limits.conf /etc/security/limits.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i '/# End of file/i\*\t\t-\tnofile\t\t65535' /etc/security/limits.conf
 
-# Ê¹ctrl+alt+del¹Ø»ú¼üÎŞĞ§
+# ä½¿ctrl+alt+delå…³æœºé”®æ— æ•ˆ
 # cp /etc/inittab /etc/inittab.`date +"%Y-%m-%d_%H-%M-%S"`
 # sed -i "s/ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/#ca::ctrlaltdel:\/sbin\/shutdown -t3 -r now/" /etc/inittab
 # /sbin/init q
 
-# °²×°fail2ban·À±©Á¦¹¤¾ß±éÀúÈõ¿ÚÁîÀûÆ÷£¬ÓĞÍâÍøIPµÄÍÆ¼ö´ò¿ª×¢ÊÍ¡£
+# å®‰è£…fail2bané˜²æš´åŠ›å·¥å…·éå†å¼±å£ä»¤åˆ©å™¨ï¼Œæœ‰å¤–ç½‘IPçš„æ¨èæ‰“å¼€æ³¨é‡Šã€‚
 # yum install fail2ban
 # cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 # sed -i 's/bantime  = 600/bantime  = 43200/' /etc/fail2ban/jail.conf
