@@ -119,11 +119,11 @@ echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise – EPEL\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/epel-sohu.repo
 # 添加CentALT源
 # 使用方法：--enablerepo=centalt
-if [[ `uname -r | awk -F. '{print substr($NF,1,3)}'` == "el5"]]; then
+if [[ `uname -r | awk -F. '{print substr($NF,1,3)}'` == "el5" ]]; then
 echo -e "[CentALT]\n"\
 "name=CentALT Packages for Enterprise Linux 5 - \$basearch\n"\
 "baseurl=http://centos.alt.ru/repository/centos/5/\$basearch/\n"\
-"enabled=1\n"\
+"enabled=0\n"\
 "gpgcheck=0" > /etc/yum.repos.d/centalt.repo
 fi
 # 添加ius源
@@ -158,8 +158,8 @@ grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -i0 {}
 # grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -c-1 {}
 
 # 配置时间同步
-echo "/usr/sbin/ntpdate cn.pool.ntp.org" >> /etc/cron.daily/ntpdate
-chmod +x /etc/cron.daily/ntpdate
+echo "/usr/sbin/ntpdate cn.pool.ntp.org" >> /etc/cron.weekly/ntpdate
+chmod +x /etc/cron.weekly/ntpdate
 
 # 配置snmpd
 cp /etc/snmp/snmpd.conf /etc/snmp/snmpd.conf.`date +"%Y-%m-%d_%H-%M-%S"`
@@ -175,10 +175,13 @@ cp /usr/share/vim/vim70/vimrc_example.vim /etc/vimrc
 sed -i -e 's/set mouse=a/" set mouse=a/' /etc/vimrc
 # 配置tab建、elflord颜色方案等
 echo "set history=1000" >> /etc/vimrc
+echo "set expandtab" >> /etc/vimrc
+echo "set ai" >> /etc/vimrc
 echo "set tabstop=4" >> /etc/vimrc
 echo "set shiftwidth=4" >> /etc/vimrc
 echo "set paste" >> /etc/vimrc
-echo "colo elflord" >> /etc/vimrc
+#echo "colo elflord" >> /etc/vimrc
+echo "colo delek" >> /etc/vimrc
  
 # 安装完成后做一些基本的设置
 # 关闭SELINUX
@@ -292,6 +295,7 @@ sed -i '/# End of file/i\*\t\t-\tnofile\t\t65535' /etc/security/limits.conf
 # /sbin/init q
 
 # 安装fail2ban防暴力工具遍历弱口令利器，有外网IP的推荐打开注释。
-# yum install fail2ban
+# yum install -y fail2ban
 # cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.`date +"%Y-%m-%d_%H-%M-%S"`
 # sed -i 's/bantime  = 600/bantime  = 43200/' /etc/fail2ban/jail.conf
+# ${SERVICE} fail2ban start
