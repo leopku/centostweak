@@ -17,7 +17,16 @@
 
 ################################################################################
 #   History:
-#	2010-09-26:
+#   2010-10-28:
+#       Fixed:
+#           Disable CentALT yum repo by default.
+#           Change running ntpdate from daily to weekly.
+#           Change default VIM coloscheme from elflord to delek.
+#           Fixed auto yes(-y) while install fail2ban by yum.
+#       Add:
+#           Add expandta & autoindent in /etc/vimrc.
+#           Add auto start fail2ban after install fail2ban.
+#   2010-09-26:
 #		Fixed:
 #           A bug while generating /etc/yum.repo.d/dag-sohu.repo.
 #           Change this file to UTF8-NOBOM.
