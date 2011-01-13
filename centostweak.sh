@@ -156,6 +156,7 @@ sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
 echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
 echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
 echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
+# echo -ne $(echo export PRMPT_COMMAND='{ cmd=$(history 1 | { read x y; echo $y; }); echo -ne [ $(date "+%c") ]$LOGNAME :: $SUDO_USER :: $SSH_CLIENT :: $SSH_TTY :: $cmd "\n"; } >> $HOME/.bash_history.log') >> /etc/bashrc
 
 # 优化硬盘
 cp /etc/fstab /etc/fstab.`date +"%Y-%m-%d_%H-%M-%S"`
