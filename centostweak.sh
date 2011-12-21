@@ -17,6 +17,13 @@
 
 ################################################################################
 #   History:
+#   2012-12-22:
+#       + add bash-completion.
+#       * Fixed a bug of adding noatime option for ext3.
+#       * Fixed a bug of disable env reset in sudoer.
+#       - remove sohu dag yum repository.
+#   2011-7-11:
+#       + Disable reseting enviroment varirables while sudo.
 #   2010-10-28:
 #       Fixed:
 #           Disable CentALT yum repo by default.
@@ -110,14 +117,14 @@ sed -i 's/plugins=1/plugins=0/' /etc/yum.conf
 sed -i 's/metadata_expire=1h/metadata_expire=24h/' /etc/yum.conf
 
 # 添加dag@sohu源
-# relver=`uname -r | awk -F. '{print $NF}'`
-echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise – dag\n"\
-"# URL: http://mirrors.sohu.com/dag/redhat/\n"\
-"[dag-sohu]\n"\
-"name = Red Hat Enterprise \$releasever – sohu.com – dag\n"\
-"baseurl = http://mirrors.sohu.com/dag/redhat/`uname -r | awk -F. '{print substr($NF,1,3)}'`/en/\$basearch/dag\n"\
-"enabled = 1\n"\
-"gpgcheck = 0"  > /etc/yum.repos.d/dag-sohu.repo
+## relver=`uname -r | awk -F. '{print $NF}'`
+##echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise – dag\n"\
+##"# URL: http://mirrors.sohu.com/dag/redhat/\n"\
+##"[dag-sohu]\n"\
+##"name = Red Hat Enterprise \$releasever – sohu.com – dag\n"\
+##"baseurl = http://mirrors.sohu.com/dag/redhat/`uname -r | awk -F. '{print substr($NF,1,3)}'`/en/\$basearch/dag\n"\
+##"enabled = 1\n"\
+##"gpgcheck = 0"  > /etc/yum.repos.d/dag-sohu.repo
 # 添加epel@sohu源
 echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise – EPEL\n"\
 "# URL: http://mirrors.sohu.com/fedora-epel/\n"\
@@ -146,23 +153,24 @@ echo -e "# Name: IUS RPM Repository for Red Hat Enterprise 5\n"\
 "gpgcheck = 0"  > /etc/yum.repos.d/ius.repo
 
 # 安装工具软件sysstat, ntp, snmpd, sudo
-yum install sysstat ntp net-snmp sudo screen -y
+yum install sysstat ntp net-snmp sudo screen bash-completion -y
 
 # 配置sudo
 cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
 # 允许wheel组的系统用户通过无密码sudo方式行使root权限
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
-sed -i -e 's/env_reset/!env_reset/' /etc/sudoers
+sed -i -e '/Defaults    env_reset/s/env_reset/!env_reset/' /etc/sudoers
 # 添加环境变量，保证sudo时不用绝对路径执行常用管理命令以及编译软件时能找到库文件
 echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
 echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
 echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
+echo 'source /etc/bash_completion' >> /etc/bashrc
 # echo -ne $(echo export PRMPT_COMMAND='{ cmd=$(history 1 | { read x y; echo $y; }); echo -ne [ $(date "+%c") ]$LOGNAME :: $SUDO_USER :: $SSH_CLIENT :: $SSH_TTY :: $cmd "\n"; } >> $HOME/.bash_history.log') >> /etc/bashrc
 
 # 优化硬盘
 cp /etc/fstab /etc/fstab.`date +"%Y-%m-%d_%H-%M-%S"`
 # 关闭系统写入文件最后读取时间
-sed -i 's/ext3    defaults/ext3    defaults,noatime/' /etc/fstab
+sed -i 's/ext3    defaults[[:space:]]/ext3    defaults,noatime/' /etc/fstab
 # 关闭系统按时间间隔决定下次重启时运行fsck
 grep ext3 /etc/fstab | grep -v boot | awk '{print $1}' | xargs -i tune2fs -i0 {}
 # 关闭系统按mount次数决定下次重启时运行fsck
@@ -211,7 +219,7 @@ echo "alias ipv6 off" >> /etc/modprobe.conf
 # 设置ssh
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.`date +"%Y-%m-%d_%H-%M-%S"`
 # 允许root远程登录
-# sed -i '/#PermitRootLogin/s/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config
+# sed -i 's/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config
 # 屏蔽掉GSSAPIAuthentication yes和GSSAPICleanupCredentials yes
 sed -i -e '74 s/^/#/' -i -e '76 s/^/#/' /etc/ssh/sshd_config
 # 取消使用DNS
