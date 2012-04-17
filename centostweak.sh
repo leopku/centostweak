@@ -17,7 +17,7 @@
 
 ################################################################################
 #   History:
-#   2012-12-22:
+#   2011-12-22:
 #       + add bash-completion.
 #       * Fixed a bug of adding noatime option for ext3.
 #       * Fixed a bug of disable env reset in sudoer.
