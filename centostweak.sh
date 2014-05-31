@@ -17,6 +17,11 @@
 
 ################################################################################
 #   History:
+#   2014-05-31:
+#       * Replaced original CentALT yum repo with neu.edu.cn
+#       * Generate file content with cat and EOF. Echo method replaced.
+#   2012-04-19:
+#       * Fixed error year.
 #   2011-12-22:
 #       + add bash-completion.
 #       * Fixed a bug of adding noatime option for ext3.
@@ -125,32 +130,41 @@ sed -i 's/metadata_expire=1h/metadata_expire=24h/' /etc/yum.conf
 ##"baseurl = http://mirrors.sohu.com/dag/redhat/`uname -r | awk -F. '{print substr($NF,1,3)}'`/en/\$basearch/dag\n"\
 ##"enabled = 1\n"\
 ##"gpgcheck = 0"  > /etc/yum.repos.d/dag-sohu.repo
+
 # 添加epel@sohu源
-echo -e "# Name: SOHU RPM Repository for Red Hat Enterprise – EPEL\n"\
-"# URL: http://mirrors.sohu.com/fedora-epel/\n"\
-"[epel-sohu]\n"\
-"name = Fedora EPEL \$releasever - sohu.com\n"\
-"baseurl = http://mirrors.sohu.com/fedora-epel/\$releasever/\$basearch\n"\
-"enabled = 1\n"\
-"gpgcheck = 0"  > /etc/yum.repos.d/epel-sohu.repo
+cat <<EOF > /etc/yum.repos.d/epel-sohu.repo
+# Name: SOHU RPM Repository for Red Hat Enterprise – EPEL
+# URL: http://mirrors.sohu.com/fedora-epel/
+[epel-sohu]
+name=Fedora EPEL $releasever - sohu.com
+baseurl=http://mirrors.sohu.com/fedora-epel/$releasever/$basearch
+enabled=1
+gpgcheck=0
+EOF
+
 # 添加CentALT源
 # 使用方法：--enablerepo=centalt
 if [[ `uname -r | awk -F. '{print substr($NF,1,3)}'` == "el5" ]]; then
-echo -e "[CentALT]\n"\
-"name=CentALT Packages for Enterprise Linux 5 - \$basearch\n"\
-"baseurl=http://centos.alt.ru/repository/centos/5/\$basearch/\n"\
-"enabled=0\n"\
-"gpgcheck=0" > /etc/yum.repos.d/centalt.repo
+    cat <<EOF > /etc/yum.repos.d/centalt.repo
+    [CentALT]
+    name=CentALT Packages for Enterprise Linux 5 - $basearch
+    baseurl=http://mirror.neu.edu.cn/CentALT/5/$basearch/
+    enabled=0
+    gpgcheck=0
+    EOF
 fi
+
 # 添加ius源
 # 使用方法：--enablerepo=ius，如yum install python26 --enablerepo=ius
-echo -e "# Name: IUS RPM Repository for Red Hat Enterprise 5\n"\
-"# URL: http://dl.iuscommunity.org/pub/ius/stable/Redhat/\n"\
-"[ius]\n"\
-"name = Red Hat Enterprise \$releasever – ius\n"\
-"baseurl = http://dl.iuscommunity.org/pub/ius/stable/Redhat/\$releasever/\$basearch/\n"\
-"enabled = 0\n"\
-"gpgcheck = 0"  > /etc/yum.repos.d/ius.repo
+cat <<EOF > /etc/yum.repos.d/ius.repo
+# Name: IUS RPM Repository for Red Hat Enterprise 5
+# URL: http://dl.iuscommunity.org/pub/ius/stable/Redhat/
+[ius]
+name=Red Hat Enterprise $releasever – ius
+baseurl=http://dl.iuscommunity.org/pub/ius/stable/Redhat/$releasever/$basearch/
+enabled=0
+gpgcheck=0
+EOF
 
 # 安装工具软件sysstat, ntp, snmpd, sudo
 yum install sysstat ntp net-snmp sudo screen bash-completion -y
@@ -161,10 +175,12 @@ cp /etc/sudoers /etc/sudoers.`date +"%Y-%m-%d_%H-%M-%S"`
 sed -i -e '/NOPASSWD/s/^# //' /etc/sudoers
 sed -i -e '/Defaults    env_reset/s/env_reset/!env_reset/; /Defaults    requiretty/s/requiretty/!requiretty/' /etc/sudoers
 # 添加环境变量，保证sudo时不用绝对路径执行常用管理命令以及编译软件时能找到库文件
-echo 'export PATH=$PATH:/sbin:/usr/sbin' >> /etc/bashrc
-echo 'export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"' >> /etc/bashrc
-echo 'export LD_LIBRARY_PATH="/usr/local/lib"' >> /etc/bashrc
-echo 'source /etc/bash_completion' >> /etc/bashrc
+cat <<EOF >> /etc/bashrc
+export PATH=$PATH:/sbin:/usr/sbin
+export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"
+export LD_LIBRARY_PATH="/usr/local/lib"
+source /etc/bash_completion
+EOF
 # echo -ne $(echo export PRMPT_COMMAND='{ cmd=$(history 1 | { read x y; echo $y; }); echo -ne [ $(date "+%c") ]$LOGNAME :: $SUDO_USER :: $SSH_CLIENT :: $SSH_TTY :: $cmd "\n"; } >> $HOME/.bash_history.log') >> /etc/bashrc
 
 # 优化硬盘
@@ -193,14 +209,16 @@ cp /usr/share/vim/vim70/vimrc_example.vim /etc/vimrc
 # 屏蔽终端下鼠标功能
 sed -i -e 's/set mouse=a/" set mouse=a/' /etc/vimrc
 # 配置tab建、elflord颜色方案等
-echo "set history=1000" >> /etc/vimrc
-echo "set expandtab" >> /etc/vimrc
-echo "set ai" >> /etc/vimrc
-echo "set tabstop=4" >> /etc/vimrc
-echo "set shiftwidth=4" >> /etc/vimrc
-echo "set paste" >> /etc/vimrc
-#echo "colo elflord" >> /etc/vimrc
-echo "colo delek" >> /etc/vimrc
+cat <<EOF > /etc/vimrc
+set history=1000
+set expandtab
+set ai
+set tabstop=4
+set shiftwidth=4
+set paste
+" colo elflord
+colo delek
+EOF
  
 # 安装完成后做一些基本的设置
 # 关闭SELINUX
@@ -242,62 +260,66 @@ done
 
 # 优化内核参数
 mv /etc/sysctl.conf /etc/sysctl.conf.`date +"%Y-%m-%d_%H-%M-%S"`
-echo -e "kernel.core_uses_pid = 1\n"\
-"kernel.msgmnb = 65536\n"\
-"kernel.msgmax = 65536\n"\
-"kernel.shmmax = 68719476736\n"\
-"kernel.shmall = 4294967296\n"\
-"kernel.sysrq = 0\n"\
-"net.core.netdev_max_backlog = 262144\n"\
-"net.core.rmem_default = 8388608\n"\
-"net.core.rmem_max = 16777216\n"\
-"net.core.somaxconn = 262144\n"\
-"net.core.wmem_default = 8388608\n"\
-"net.core.wmem_max = 16777216\n"\
-"net.ipv4.conf.default.rp_filter = 1\n"\
-"net.ipv4.conf.default.accept_source_route = 0\n"\
-"net.ipv4.ip_forward = 0\n"\
-"net.ipv4.ip_local_port_range = 5000 65000\n"\
-"net.ipv4.tcp_fin_timeout = 1\n"\
-"net.ipv4.tcp_keepalive_time = 30\n"\
-"net.ipv4.tcp_max_orphans = 3276800\n"\
-"net.ipv4.tcp_max_syn_backlog = 262144\n"\
-"net.ipv4.tcp_max_tw_buckets = 6000\n"\
-"net.ipv4.tcp_mem = 94500000 915000000 927000000\n"\
-"# net.ipv4.tcp_no_metrics_save=1\n"\
-"net.ipv4.tcp_rmem = 4096    87380   16777216\n"\
-"net.ipv4.tcp_sack = 1\n"\
-"net.ipv4.tcp_syn_retries = 1\n"\
-"net.ipv4.tcp_synack_retries = 1\n"\
-"net.ipv4.tcp_syncookies = 1\n"\
-"net.ipv4.tcp_timestamps = 0\n"\
-"net.ipv4.tcp_tw_recycle = 1\n"\
-"net.ipv4.tcp_tw_reuse = 1\n"\
-"net.ipv4.tcp_window_scaling = 1\n"\
-"net.ipv4.tcp_wmem = 4096    16384   16777216\n" > /etc/sysctl.conf
+cat <<EOF > /etc/sysctl.conf
+kernel.core_uses_pid = 1
+kernel.msgmnb = 65536
+kernel.msgmax = 65536
+kernel.shmmax = 68719476736
+kernel.shmall = 4294967296
+kernel.sysrq = 0
+net.core.netdev_max_backlog = 262144
+net.core.rmem_default = 8388608
+net.core.rmem_max = 16777216
+net.core.somaxconn = 262144
+net.core.wmem_default = 8388608
+net.core.wmem_max = 16777216
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.ip_forward = 0
+net.ipv4.ip_local_port_range = 5000 65000
+net.ipv4.tcp_fin_timeout = 1
+net.ipv4.tcp_keepalive_time = 30
+net.ipv4.tcp_max_orphans = 3276800
+net.ipv4.tcp_max_syn_backlog = 262144
+net.ipv4.tcp_max_tw_buckets = 6000
+net.ipv4.tcp_mem = 94500000 915000000 927000000
+# net.ipv4.tcp_no_metrics_save=1
+net.ipv4.tcp_rmem = 4096    87380   16777216
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_syn_retries = 1
+net.ipv4.tcp_synack_retries = 1
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_wmem = 4096    16384   16777216
+EOF
 sysctl -p
 
 # 设置iptables
 if [ -f /etc/sysconfig/iptables ]; then
     cp /etc/sysconfig/iptables /etc/sysconfig/iptables.`date +"%Y-%m-%d_%H-%M-%S"`
 fi
-echo -e "*filter\n"\
-":INPUT DROP [0:0]\n"\
-"#:INPUT ACCEPT [0:0]\n"\
-":FORWARD ACCEPT [0:0]\n"\
-":OUTPUT ACCEPT [0:0]\n"\
-"-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\n"\
-"-A INPUT -p icmp -m icmp --icmp-type any -j ACCEPT\n"\
-"# setting trust ethernet.\n"\
-"-A INPUT -i eth0 -j ACCEPT\n"\
-"-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT\n"\
-"-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT\n"\
-"-A INPUT -d 127.0.0.1 -j ACCEPT\n"\
-"-A INPUT -j DROP\n"\
-"-A FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 1/sec -j ACCEPT \n"\
-"-A FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK RST -m limit --limit 1/sec -j ACCEPT \n"\
-"#-A FORWARD -p icmp -m icmp --icmp-type 8 -m limit --limit 1/sec -j ACCEPT \n"\
-"COMMIT\n" > /etc/sysconfig/iptables
+cat <<EOF > /etc/sysconfig/iptables
+*filter
+:INPUT DROP [0:0]
+#:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type any -j ACCEPT
+# setting trust ethernet.
+-A INPUT -i eth0 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+-A INPUT -d 127.0.0.1 -j ACCEPT
+-A INPUT -j DROP
+-A FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 1/sec -j ACCEPT
+-A FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK RST -m limit --limit 1/sec -j ACCEPT
+#-A FORWARD -p icmp -m icmp --icmp-type 8 -m limit --limit 1/sec -j ACCEPT
+COMMIT
+EOF
 ${SERVICE} iptables restart
 
 # Linux 大多都是远程维护 pts连接的，可以关闭多余的 tty，保留一个用于物理登陆
